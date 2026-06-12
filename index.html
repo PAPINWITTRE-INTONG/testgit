@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOA Group — Cloudflare Pages Test</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #E85B20;
+      --orange-light: #FDF0EA;
+      --orange-mid: #F9A07A;
+      --navy: #1A2340;
+      --navy-mid: #2D3A5C;
+      --gray-bg: #F5F6F8;
+      --gray-border: #E0E3EA;
+      --gray-text: #6B7280;
+      --white: #FFFFFF;
+      --green: #1A9E6A;
+      --green-bg: #EBF8F2;
+      --red: #D63B3B;
+      --red-bg: #FDF0F0;
+      --amber: #C97B10;
+      --amber-bg: #FEF6E6;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono: 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--gray-bg);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--orange);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .logo span.tag {
+      background: var(--orange);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      background: #2ecc71;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .header-right span {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+    }
+    #live-time {
+      font-size: 13px;
+      color: var(--orange-mid);
+      font-family: var(--mono);
+    }
+
+    /* ── Hero Banner ── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+      color: white;
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 40px;
+      background: var(--gray-bg);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .hero p { font-size: 15px; color: rgba(255,255,255,0.65); margin-bottom: 1.5rem; }
+    .cf-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+    }
+    .cf-badge svg { width: 16px; height: 16px; }
+
+    /* ── Main Layout ── */
+    .main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 680px) {
+      .main { grid-template-columns: 1fr; }
+      header { padding: 0 1rem; }
+      .hero h1 { font-size: 22px; }
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .card.full-width { grid-column: 1 / -1; }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-text);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 14px;
+      background: var(--orange);
+      border-radius: 2px;
+    }
+
+    /* ── Status Grid ── */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .status-item {
+      background: var(--gray-bg);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .status-item .label {
+      font-size: 11px;
+      color: var(--gray-text);
+      margin-bottom: 4px;
+    }
+    .status-item .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .value.ok { color: var(--green); }
+    .value.warn { color: var(--amber); }
+    .value.err { color: var(--red); }
+
+    /* ── Response Test ── */
+    .test-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-bg);
+    }
+    .test-row:last-child { border-bottom: none; }
+    .test-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .test-icon.pass { background: var(--green-bg); }
+    .test-icon.fail { background: var(--red-bg); }
+    .test-icon.pend { background: var(--amber-bg); }
+    .test-label { flex: 1; font-size: 14px; }
+    .test-label small { display: block; font-size: 11px; color: var(--gray-text); margin-top: 2px; }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .pill.pass { background: var(--green-bg); color: var(--green); }
+    .pill.fail { background: var(--red-bg); color: var(--red); }
+    .pill.pend { background: var(--amber-bg); color: var(--amber); }
+    .pill.info { background: #EAF1FD; color: #2563EB; }
+
+    /* ── Headers Table ── */
+    .header-table { width: 100%; font-size: 13px; }
+    .header-table td { padding: 6px 0; border-bottom: 1px solid var(--gray-bg); }
+    .header-table td:first-child {
+      color: var(--gray-text);
+      width: 45%;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .header-table td:last-child {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--navy-mid);
+      word-break: break-all;
+    }
+
+    /* ── Form Test ── */
+    .form-row { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; color: var(--gray-text); margin-bottom: 5px; font-weight: 500; }
+    input[type=text], input[type=email], select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--navy);
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--orange); }
+    .btn {
+      display: inline-block;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--orange); color: white; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-outline { background: white; color: var(--navy); border: 1px solid var(--gray-border); }
+    .btn-outline:hover { background: var(--gray-bg); }
+    #form-result {
+      margin-top: 10px;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* ── Latency Bar ── */
+    .latency-wrap { margin-top: 4px; }
+    .latency-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .latency-label { font-size: 12px; color: var(--gray-text); width: 90px; flex-shrink: 0; }
+    .bar-track {
+      flex: 1; height: 8px;
+      background: var(--gray-bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+    .bar-fill.fast { background: var(--green); }
+    .bar-fill.mid  { background: var(--amber); }
+    .bar-fill.slow { background: var(--red); }
+    .latency-val { font-size: 12px; font-family: var(--mono); width: 48px; text-align: right; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 12px;
+      color: var(--gray-text);
+    }
+    footer strong { color: var(--navy); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#E85B20"/>
+      <text x="14" y="20" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="13" font-weight="700" fill="white">TOA</text>
+    </svg>
+    TOA Group
+    <span class="tag">CF Pages</span>
+  </div>
+  <div class="header-right">
+    <span><span class="status-dot"></span>Deployed</span>
+    <span id="live-time">--:--:--</span>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>🚀 Cloudflare Pages — Test Page</h1>
+  <p>ใช้ทดสอบการ Deploy, Headers, Form, และ Performance บน Cloudflare</p>
+  <div class="cf-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 0 1 0 9Z"/>
+    </svg>
+    Cloudflare Pages — Edge Deployed
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ── Deploy Info ── -->
+  <div class="card">
+    <div class="card-title">Deploy Info</div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="label">Environment</div>
+        <div class="value ok" id="env-val">Production</div>
+      </div>
+      <div class="status-item">
+        <div class="label">HTTPS</div>
+        <div class="value" id="https-val">—</div>
+      </div>
+      <div class="status-item">
+        <div class="label">Protocol</div>
+        <div class="value" id="proto-val">—</div>
+      </div>
+      <div class="status-item">
+        <div class="label">Hostname</div>
+        <div class="value" id="host-val">—</div>
+      </div>
+      <div class="status-item">
+        <div class="label">Path</div>
+        <div class="value" id="path-val">—</div>
+      </div>
+      <div class="status-item">
+        <div class="label">Load Time</div>
+        <div class="value ok" id="load-val">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Checklist ── -->
+  <div class="card">
+    <div class="card-title">Deployment Checklist</div>
+
+    <div class="test-row">
+      <div class="test-icon pass">✅</div>
+      <div class="test-label">HTML Renders Correctly<small>Parsing &amp; rendering ผ่านปกติ</small></div>
+      <span class="pill pass">PASS</span>
+    </div>
+
+    <div class="test-row">
+      <div class="test-icon pass">✅</div>
+      <div class="test-label">CSS Styles Applied<small>Stylesheet โหลดสำเร็จ</small></div>
+      <span class="pill pass">PASS</span>
+    </div>
+
+    <div class="test-row">
+      <div class="test-icon" id="js-icon" style="background:var(--amber-bg)">⏳</div>
+      <div class="test-label">JavaScript Active<small id="js-label">กำลังตรวจสอบ...</small></div>
+      <span class="pill pend" id="js-pill">CHECKING</span>
+    </div>
+
+    <div class="test-row">
+      <div class="test-icon" id="https-icon" style="background:var(--amber-bg)">⏳</div>
+      <div class="test-label">HTTPS / TLS<small id="https-label">ตรวจสอบ Protocol...</small></div>
+      <span class="pill pend" id="https-pill">CHECKING</span>
+    </div>
+
+    <div class="test-row">
+      <div class="test-icon pass">✅</div>
+      <div class="test-label">Responsive Layout<small>Mobile &amp; Desktop รองรับ</small></div>
+      <span class="pill pass">PASS</span>
+    </div>
+  </div>
+
+  <!-- ── HTTP Headers ── -->
+  <div class="card">
+    <div class="card-title">HTTP Info (Client-side)</div>
+    <table class="header-table">
+      <tr><td>User-Agent</td><td id="ua-val">—</td></tr>
+      <tr><td>Language</td><td id="lang-val">—</td></tr>
+      <tr><td>Platform</td><td id="plat-val">—</td></tr>
+      <tr><td>Screen</td><td id="screen-val">—</td></tr>
+      <tr><td>Online</td><td id="online-val">—</td></tr>
+      <tr><td>Cookies</td><td id="cookie-val">—</td></tr>
+    </table>
+  </div>
+
+  <!-- ── Latency ── -->
+  <div class="card">
+    <div class="card-title">Performance Indicators</div>
+    <div class="latency-wrap">
+      <div class="latency-row">
+        <div class="latency-label">DNS Lookup</div>
+        <div class="bar-track"><div class="bar-fill fast" id="bar-dns" style="width:0%"></div></div>
+        <div class="latency-val" id="val-dns">—</div>
+      </div>
+      <div class="latency-row">
+        <div class="latency-label">TCP Connect</div>
+        <div class="bar-track"><div class="bar-fill fast" id="bar-tcp" style="width:0%"></div></div>
+        <div class="latency-val" id="val-tcp">—</div>
+      </div>
+      <div class="latency-row">
+        <div class="latency-label">TLS / SSL</div>
+        <div class="bar-track"><div class="bar-fill mid" id="bar-tls" style="width:0%"></div></div>
+        <div class="latency-val" id="val-tls">—</div>
+      </div>
+      <div class="latency-row">
+        <div class="latency-label">DOM Load</div>
+        <div class="bar-track"><div class="bar-fill mid" id="bar-dom" style="width:0%"></div></div>
+        <div class="latency-val" id="val-dom">—</div>
+      </div>
+      <div class="latency-row">
+        <div class="latency-label">Page Load</div>
+        <div class="bar-track"><div class="bar-fill slow" id="bar-page" style="width:0%"></div></div>
+        <div class="latency-val" id="val-page">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form Test ── -->
+  <div class="card full-width">
+    <div class="card-title">Form Submission Test</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+      <div class="form-row">
+        <label for="f-name">ชื่อ-นามสกุล</label>
+        <input type="text" id="f-name" placeholder="เช่น สมชาย ใจดี" />
+      </div>
+      <div class="form-row">
+        <label for="f-email">อีเมล</label>
+        <input type="email" id="f-email" placeholder="user@toagroup.com" />
+      </div>
+      <div class="form-row">
+        <label for="f-dept">แผนก</label>
+        <select id="f-dept">
+          <option value="">เลือกแผนก...</option>
+          <option>IT Infrastructure</option>
+          <option>Security</option>
+          <option>Network</option>
+          <option>Software</option>
+          <option>AI &amp; Automation</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-primary" onclick="submitForm()">ส่งข้อมูลทดสอบ</button>
+      <button class="btn btn-outline" onclick="clearForm()">ล้างข้อมูล</button>
+    </div>
+    <div id="form-result"></div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>TOA Group IT</strong> · Cloudflare Pages Test Page · Static Deploy Validation ·
+  Built for infrastructure testing only
+</footer>
+
+<script>
+  // ── Live Clock ──
+  function tick() {
+    const now = new Date();
+    document.getElementById('live-time').textContent =
+      now.toLocaleTimeString('th-TH', { hour12: false });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ── JS Check ──
+  document.getElementById('js-icon').textContent = '✅';
+  document.getElementById('js-icon').style.background = 'var(--green-bg)';
+  document.getElementById('js-label').textContent = 'JavaScript ทำงานได้ปกติ';
+  document.getElementById('js-pill').textContent = 'PASS';
+  document.getElementById('js-pill').className = 'pill pass';
+
+  // ── HTTPS Check ──
+  const isHttps = location.protocol === 'https:';
+  document.getElementById('https-icon').textContent = isHttps ? '✅' : '⚠️';
+  document.getElementById('https-icon').style.background = isHttps ? 'var(--green-bg)' : 'var(--red-bg)';
+  document.getElementById('https-label').textContent = isHttps ? 'HTTPS เปิดใช้งาน — TLS OK' : 'HTTP เท่านั้น — ไม่ปลอดภัย';
+  document.getElementById('https-pill').textContent = isHttps ? 'PASS' : 'WARN';
+  document.getElementById('https-pill').className = isHttps ? 'pill pass' : 'pill fail';
+
+  // ── Deploy Info ──
+  document.getElementById('https-val').textContent = isHttps ? '✓ Secure' : '✗ Not Secure';
+  document.getElementById('https-val').className = 'value ' + (isHttps ? 'ok' : 'err');
+  document.getElementById('proto-val').textContent = location.protocol.replace(':','').toUpperCase();
+  document.getElementById('host-val').textContent = location.hostname || 'localhost';
+  document.getElementById('path-val').textContent = location.pathname;
+
+  // ── Client Info ──
+  const ua = navigator.userAgent;
+  document.getElementById('ua-val').textContent =
+    ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' :
+    ua.includes('Safari') ? 'Safari' : ua.includes('Edge') ? 'Edge' : ua.substring(0,30);
+  document.getElementById('lang-val').textContent = navigator.language || '—';
+  document.getElementById('plat-val').textContent = navigator.platform || '—';
+  document.getElementById('screen-val').textContent = screen.width + ' × ' + screen.height + ' @ ' + window.devicePixelRatio + 'x';
+  document.getElementById('online-val').textContent = navigator.onLine ? '✓ Online' : '✗ Offline';
+  document.getElementById('cookie-val').textContent = navigator.cookieEnabled ? 'Enabled' : 'Disabled';
+
+  // ── Performance Timing ──
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      const t = performance.timing;
+      const nav = performance.getEntriesByType('navigation')[0];
+
+      const dns    = (t.domainLookupEnd - t.domainLookupStart) || 0;
+      const tcp    = (t.connectEnd - t.connectStart) || 0;
+      const tls    = t.secureConnectionStart > 0 ? (t.connectEnd - t.secureConnectionStart) : 0;
+      const dom    = (t.domContentLoadedEventEnd - t.navigationStart) || 0;
+      const page   = (t.loadEventEnd - t.navigationStart) || 0;
+
+      const loadMs = page;
+      document.getElementById('load-val').textContent = loadMs + ' ms';
+      document.getElementById('load-val').className = 'value ' + (loadMs < 1500 ? 'ok' : loadMs < 3000 ? 'warn' : 'err');
+
+      function setBar(id, val, barId, max) {
+        document.getElementById(id).textContent = val + ' ms';
+        const pct = Math.min(100, Math.round((val / max) * 100));
+        document.getElementById(barId).style.width = pct + '%';
+      }
+      setBar('val-dns',  dns,  'bar-dns',  200);
+      setBar('val-tcp',  tcp,  'bar-tcp',  200);
+      setBar('val-tls',  tls,  'bar-tls',  500);
+      setBar('val-dom',  dom,  'bar-dom',  3000);
+      setBar('val-page', page, 'bar-page', 5000);
+    }, 100);
+  });
+
+  // ── Form Test ──
+  function submitForm() {
+    const name  = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const dept  = document.getElementById('f-dept').value;
+    const res   = document.getElementById('form-result');
+    if (!name || !email || !dept) {
+      res.style.display = 'block';
+      res.style.background = 'var(--red-bg)';
+      res.style.color = 'var(--red)';
+      res.textContent = '⚠️  กรุณากรอกข้อมูลให้ครบทุกช่อง';
+      return;
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailOk) {
+      res.style.display = 'block';
+      res.style.background = 'var(--red-bg)';
+      res.style.color = 'var(--red)';
+      res.textContent = '⚠️  รูปแบบอีเมลไม่ถูกต้อง';
+      return;
+    }
+    res.style.display = 'block';
+    res.style.background = 'var(--green-bg)';
+    res.style.color = 'var(--green)';
+    res.textContent = '✅  Form Validation ผ่าน — ' + name + ' (' + dept + ') — ' + new Date().toLocaleTimeString('th-TH');
+  }
+  function clearForm() {
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-email').value = '';
+    document.getElementById('f-dept').value = '';
+    const res = document.getElementById('form-result');
+    res.style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
